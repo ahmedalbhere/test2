@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>طابور اونلاين</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- صفحة اختيار الدور -->
+    <div id="roleSelection" class="container role-selection">
+        <h1>طابور اونلاين</h1>
+        <button class="role-btn client-btn" onclick="showScreen('clientLogin')">
+            <i class="fas fa-user"></i> زبون
+        </button>
+        <button class="role-btn barber-btn" onclick="showScreen('providerLogin')">
+            <i class="fas fa-cut"></i> مقدم الخدمة
+        </button>
+    </div>
+
+    <!-- تسجيل دخول الزبون -->
+    <div id="clientLogin" class="container login-container hidden">
+        <div class="login-box">
+            <h2><i class="fas fa-user"></i> تسجيل دخول الزبون</h2>
+            <div id="clientError" class="error-message hidden"></div>
+            <div class="form-group">
+                <label for="clientName"><i class="fas fa-signature"></i> الاسم الكامل</label>
+                <input type="text" id="clientName" class="form-input" placeholder="أدخل اسمك الكامل" required>
+            </div>
+            <div class="form-group">
+                <label for="clientPhone"><i class="fas fa-phone"></i> رقم الهاتف</label>
+                <input type="tel" id="clientPhone" class="form-input" placeholder="أدخل رقم الهاتف" required>
+            </div>
+            <div class="remember-me">
+                <input type="checkbox" id="rememberMeClient">
+                <label for="rememberMeClient">تذكر بياناتي</label>
+            </div>
+            <button class="btn btn-primary btn-block" onclick="clientLogin()">
+                <i class="fas fa-sign-in-alt"></i> دخول
+            </button>
+            <button class="btn btn-outline btn-block" onclick="showScreen('roleSelection')">
+                <i class="fas fa-arrow-right"></i> رجوع
+            </button>
+        </div>
+    </div>
+
+    <!-- تسجيل دخول وإنشاء حساب مقدم الخدمة -->
+    <div id="providerLogin" class="container login-container hidden">
+        <div class="login-box">
+            <h2 id="providerFormTitle"><i class="fas fa-cut"></i> تسجيل الدخول لمقدمي الخدمة</h2>
+            <div id="providerError" class="error-message hidden"></div>
+            
+            <div id="providerLoginForm">
+                <div class="form-group">
+                    <label for="providerPhone"><i class="fas fa-phone"></i> رقم الهاتف</label>
+                    <input type="tel" id="providerPhone" class="form-input" placeholder="أدخل رقم الهاتف المسجل" required>
+                </div>
+                <div class="form-group">
+                    <label for="providerPassword"><i class="fas fa-lock"></i> كلمة المرور</label>
+                    <input type="password" id="providerPassword" class="form-input" placeholder="أدخل كلمة المرور" required>
+                </div>
+                <div class="remember-me">
+                    <input type="checkbox" id="rememberMeProvider">
+                    <label for="rememberMeProvider">تذكر بياناتي</label>
+                </div>
+                <button class="btn btn-primary btn-block" onclick="providerLogin()">
+                    <i class="fas fa-sign-in-alt"></i> تسجيل الدخول
+                </button>
+                <button class="btn btn-outline btn-block" onclick="showProviderSignup()">
+                    <i class="fas fa-user-plus"></i> إنشاء حساب جديد
+                </button>
+            </div>
+            
+            <div id="providerSignupForm" class="hidden">
+                <div class="form-group">
+                    <label for="providerName"><i class="fas fa-signature"></i> اسم مقدم الخدمة</label>
+                    <input type="text" id="providerName" class="form-input" placeholder="أدخل اسم مقدم الخدمة" required>
+                </div>
+                <div class="form-group">
+                    <label for="newProviderPhone"><i class="fas fa-phone"></i> رقم الهاتف</label>
+                    <input type="tel" id="newProviderPhone" class="form-input" placeholder="أدخل رقم هاتفك" required>
+                </div>
+                <div class="form-group">
+                    <label for="providerCity"><i class="fas fa-city"></i> المدينة</label>
+                    <input type="text" id="providerCity" class="form-input" placeholder="أدخل المدينة" required>
+                </div>
+                <div class="form-group">
+                    <label for="providerServiceType"><i class="fas fa-scissors"></i> نوع الخدمة</label>
+                    <input type="text" id="providerServiceType" class="form-input" placeholder="أدخل نوع الخدمة (مثال: حلاقة رجالي، حلاقة أطفال)" required>
+                </div>
+                <div class="form-group">
+                    <label for="providerLocation"><i class="fas fa-map-marker-alt"></i> موقع المحل</label>
+                    <input type="text" id="providerLocation" class="form-input" placeholder="أدخل عنوان المحل بالكامل" required>
+                </div>
+                <div class="form-group">
+                    <label for="newProviderPassword"><i class="fas fa-lock"></i> كلمة المرور</label>
+                    <input type="password" id="newProviderPassword" class="form-input" placeholder="اختر كلمة مرور (6 أحرف على الأقل)" required>
+                </div>
+                <div class="form-group">
+                    <label for="confirmProviderPassword"><i class="fas fa-lock"></i> تأكيد كلمة المرور</label>
+                    <input type="password" id="confirmProviderPassword" class="form-input" placeholder="أعد إدخال كلمة المرور" required>
+                </div>
+                <button class="btn btn-primary btn-block" onclick="providerSignup()">
+                    <i class="fas fa-user-plus"></i> إنشاء حساب
+                </button>
+                <button class="btn btn-outline btn-block" onclick="showProviderLogin()">
+                    <i class="fas fa-sign-in-alt"></i> لديك حساب؟ تسجيل الدخول
+                </button>
+            </div>
+            
+            <button class="btn btn-outline btn-block" onclick="showScreen('roleSelection')">
+                <i class="fas fa-arrow-right"></i> رجوع
+            </button>
+        </div>
+    </div>
+
+    <!-- لوحة تحكم مقدم الخدمة -->
+    <div id="providerDashboard" class="dashboard hidden">
+        <div class="header">
+            <div class="header-title">
+                <i class="fas fa-cut"></i> لوحة تحكم مقدم الخدمة
+            </div>
+            <div class="shop-status">
+                <span class="status-text" id="statusText">مفتوح</span>
+                <label class="status-toggle">
+                    <input type="checkbox" id="statusToggle" checked>
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div class="user-info">
+                <div class="user-avatar" id="providerAvatar">م</div>
+                <button class="btn btn-icon btn-danger" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </div>
+        </div>
+        <div class="content">
+            <h2 class="section-title">
+                <i class="fas fa-users"></i> قائمة الانتظار
+            </h2>
+            <ul class="queue-list" id="providerQueue">
+                <li>جارٍ تحميل قائمة الانتظار...</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- لوحة تحكم الزبون -->
+    <div id="clientDashboard" class="dashboard hidden">
+        <div class="header">
+            <div class="header-title">
+                <i class="fas fa-user"></i> لوحة تحكم الزبون
+            </div>
+            <div class="user-info">
+                <div class="user-avatar" id="clientAvatar">ز</div>
+                <button class="btn btn-icon btn-danger" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </div>
+        </div>
+        <div class="content">
+            <div id="currentBookingContainer" class="current-booking hidden">
+                <h3 class="booking-title">
+                    <i class="fas fa-calendar-check"></i> حجزك الحالي
+                </h3>
+                <div class="booking-info">
+                    <span class="booking-label">مقدم الخدمة:</span>
+                    <span id="bookingProvider"></span>
+                </div>
+                <div class="booking-info">
+                    <span class="booking-label">موقعك في الطابور:</span>
+                    <span id="bookingPosition"></span>
+                </div>
+                <div class="booking-info">
+                    <span class="booking-label">وقت الحجز:</span>
+                    <span id="bookingTime"></span>
+                </div>
+                <button id="cancelBookingBtn" class="btn btn-danger btn-block">
+                    <i class="fas fa-times"></i> إلغاء الحجز
+                </button>
+            </div>
+            
+            <div id="ratingContainer" class="rating-container hidden">
+                <h4 class="rating-title">قيم تجربتك مع مقدم الخدمة</h4>
+                <div class="stars">
+                    <i class="fas fa-star" data-rating="1"></i>
+                    <i class="fas fa-star" data-rating="2"></i>
+                    <i class="fas fa-star" data-rating="3"></i>
+                    <i class="fas fa-star" data-rating="4"></i>
+                    <i class="fas fa-star" data-rating="5"></i>
+                </div>
+                <textarea id="ratingComment" class="rating-comment" placeholder="اكتب تعليقك (اختياري)"></textarea>
+                <button class="btn btn-primary btn-block" onclick="submitRating()">
+                    <i class="fas fa-check"></i> إرسال التقييم
+                </button>
+            </div>
+            
+            <div class="search-filters">
+                <div class="search-container">
+                    <input type="text" id="citySearch" class="form-input" placeholder="ابحث حسب المدينة">
+                    <button class="search-btn" onclick="filterProviders()">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+                <div class="search-container">
+                    <input type="text" id="serviceTypeSearch" class="form-input" placeholder="ابحث حسب نوع الخدمة">
+                    <button class="search-btn" onclick="filterProviders()">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <h2 class="section-title">
+                <i class="fas fa-cut"></i> مقدمي الخدمة المتاحين
+            </h2>
+            <div class="providers-list" id="providersList">
+                <div class="provider-card">
+                    <div class="provider-info">
+                        <div class="provider-header">
+                            <div class="provider-avatar">م</div>
+                            <div class="provider-name">جارٍ التحميل...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js" type="module"></script>
+</body>
+</html>
