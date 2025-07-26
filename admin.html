@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>لوحة الإدارة</title>
+  <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+  <h2>تسجيل دخول الإدارة</h2>
+  <input type="password" id="admin-pass" placeholder="كلمة السر">
+  <button onclick="login()">دخول</button>
+
+  <div id="admin-panel">
+    <h3>طلبات العملاء</h3>
+    <div id="orders"></div>
+
+    <h3>إدارة المنيو</h3>
+    <input type="text" id="newItem" placeholder="اسم الصنف">
+    <input type="number" id="newPrice" placeholder="السعر بالجنيه">
+    <button onclick="addMenuItem()">إضافة</button>
+
+    <h4>قائمة الأصناف الحالية</h4>
+    <div id="menu-list"></div>
+  </div>
+
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>
