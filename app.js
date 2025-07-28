@@ -257,7 +257,10 @@ async function providerSignup() {
       status: 'open',
       queue: {},
       averageRating: 0,
-      ratingCount: 0
+      ratingCount: 0,
+      verified: false,
+      banned: false,
+      createdAt: Date.now()
     });
     
     state.currentUser = {
@@ -398,7 +401,13 @@ async function loadServiceProviders() {
   }
   
   state.providersListener = onValue(ref(database, 'serviceProviders'), (snapshot) => {
-    state.serviceProviders = snapshot.val() || {};
+    const providers = snapshot.val() || {};
+    
+    // تصفية الحسابات المحظورة
+    state.serviceProviders = Object.fromEntries(
+      Object.entries(providers).filter(([id, provider]) => !provider.banned)
+    );
+    
     renderProvidersList();
   }, (error) => {
     elements.client.providersList.innerHTML = '<div class="error">حدث خطأ أثناء تحميل مقدمي الخدمة</div>';
@@ -440,11 +449,15 @@ function renderProvidersList() {
         <span class="provider-rating-count">(${provider.ratingCount || 0})</span>
       </div>` : '';
     
+    // إضافة علامة التوثيق إذا كان الحساب موثقاً
+    const verifiedBadge = provider.verified ? 
+      '<span class="verified-badge"><i class="fas fa-check-circle"></i> موثق</span>' : '';
+    
     providerCard.innerHTML = `
       <div class="provider-info">
         <div class="provider-header">
           <div class="provider-avatar">${provider.name.charAt(0)}</div>
-          <div class="provider-name">${provider.name}</div>
+          <div class="provider-name">${provider.name} ${verifiedBadge}</div>
         </div>
         <div class="provider-status ${statusClass}">${statusText}</div>
         ${ratingStars}
