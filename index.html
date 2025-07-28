@@ -2,13 +2,8 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="description" content="طابور أونلاين هو نظام حجز مواعيد إلكتروني يساعدك في تنظيم دورك عند الحلاقين ومقدمي الخدمات بكل سهولة.">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="google-site-verification" content="XIcTZUC33lJCv30PX7pLx9a8OIbagmwmbTouWh0kw3Y" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>طابور اونلاين</title>
-    <link rel="icon" href="favicon.ico" type="image/x-icon">
-    <link rel="icon" type="image/png" sizes="32x32" href="favicon.png">
-    <link rel="apple-touch-icon" href="apple-touch-icon.png">
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="styles.css">
@@ -22,6 +17,9 @@
         </button>
         <button class="role-btn barber-btn" onclick="showScreen('providerLogin')">
             <i class="fas fa-cut"></i> مقدم الخدمة
+        </button>
+        <button class="role-btn admin-btn" onclick="window.location.href='providers.html'">
+            <i class="fas fa-shield-alt"></i> لوحة التحكم
         </button>
     </div>
 
@@ -118,36 +116,6 @@
             <button class="btn btn-outline btn-block" onclick="showScreen('roleSelection')">
                 <i class="fas fa-arrow-right"></i> رجوع
             </button>
-        </div>
-    </div>
-
-    <!-- لوحة تحكم مقدم الخدمة -->
-    <div id="providerDashboard" class="dashboard hidden">
-        <div class="header">
-            <div class="header-title">
-                <i class="fas fa-cut"></i> لوحة تحكم مقدم الخدمة
-            </div>
-            <div class="shop-status">
-                <span class="status-text" id="statusText">مفتوح</span>
-                <label class="status-toggle">
-                    <input type="checkbox" id="statusToggle" checked>
-                    <span class="slider"></span>
-                </label>
-            </div>
-            <div class="user-info">
-                <div class="user-avatar" id="providerAvatar">م</div>
-                <button class="btn btn-icon btn-danger" onclick="logout()">
-                    <i class="fas fa-sign-out-alt"></i>
-                </button>
-            </div>
-        </div>
-        <div class="content">
-            <h2 class="section-title">
-                <i class="fas fa-users"></i> قائمة الانتظار
-            </h2>
-            <ul class="queue-list" id="providerQueue">
-                <li>جارٍ تحميل قائمة الانتظار...</li>
-            </ul>
         </div>
     </div>
 
