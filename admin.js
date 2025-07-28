@@ -1,4 +1,3 @@
-// Import Firebase modules
 import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.0/firebase-app.js";
 import { 
   getDatabase, 
@@ -14,7 +13,7 @@ import {
   signOut 
 } from "https://www.gstatic.com/firebasejs/9.6.0/firebase-auth.js";
 
-// Firebase configuration (يجب أن يكون نفس إعدادات التطبيق الرئيسي)
+// Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyCJ4VhGD49H3RNifMf9VCRPnkALAxNpsOU",
   authDomain: "project-2980864980936907935.firebaseapp.com",
@@ -33,53 +32,22 @@ const auth = getAuth(app);
 
 // حالة التطبيق
 const state = {
-  accounts: [],
-  filteredAccounts: [],
-  currentAccount: null,
+  providers: [],
+  filteredProviders: [],
   cities: new Set()
 };
 
 // عناصر DOM
 const elements = {
-  searchInput: document.getElementById('accountSearch'),
-  accountTypeFilter: document.getElementById('accountTypeFilter'),
+  searchInput: document.getElementById('providerSearch'),
   statusFilter: document.getElementById('statusFilter'),
   cityFilter: document.getElementById('cityFilter'),
-  accountsTableBody: document.getElementById('accountsTableBody'),
-  totalAccounts: document.getElementById('totalAccounts'),
-  activeAccounts: document.getElementById('activeAccounts'),
-  bannedAccounts: document.getElementById('bannedAccounts'),
-  reportedAccounts: document.getElementById('reportedAccounts'),
-  refreshBtn: document.getElementById('refreshBtn'),
-  accountModal: document.getElementById('accountModal'),
-  modalAccountName: document.getElementById('modalAccountName'),
-  modalAccountAvatar: document.getElementById('modalAccountAvatar'),
-  modalAccountPhone: document.getElementById('modalAccountPhone'),
-  modalAccountType: document.getElementById('modalAccountType'),
-  modalAccountCity: document.getElementById('modalAccountCity'),
-  modalAccountDate: document.getElementById('modalAccountDate'),
-  modalAccountStatus: document.getElementById('modalAccountStatus'),
-  accountReportsList: document.getElementById('accountReportsList'),
-  banAccountBtn: document.getElementById('banAccountBtn'),
-  unbanAccountBtn: document.getElementById('unbanAccountBtn'),
-  warnAccountBtn: document.getElementById('warnAccountBtn'),
-  accountReportsSection: document.getElementById('accountReportsSection')
+  providersGrid: document.getElementById('providersGrid'),
+  refreshBtn: document.getElementById('refreshBtn')
 };
 
 // وظائف المساعدة
 const utils = {
-  formatDate: (timestamp) => {
-    if (!timestamp) return 'غير معروف';
-    const date = new Date(timestamp);
-    return date.toLocaleDateString('ar-EG', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  },
-  
   debounce: (func, delay) => {
     let timeout;
     return (...args) => {
@@ -89,52 +57,38 @@ const utils = {
   },
   
   showError: (message) => {
-    alert(message); // يمكن استبدال هذا بنظام تنبيهات أفضل
+    alert(message);
+  },
+  
+  showSuccess: (message) => {
+    alert(message);
   }
 };
 
-// تحميل الحسابات من Firebase
-async function loadAccounts() {
+// تحميل مقدمي الخدمة من Firebase
+function loadProviders() {
   try {
-    const accountsRef = ref(database, 'serviceProviders');
-    const clientsRef = ref(database, 'clients');
+    const providersRef = ref(database, 'serviceProviders');
     
-    // جلب مقدمي الخدمة
-    onValue(accountsRef, (snapshot) => {
+    onValue(providersRef, (snapshot) => {
       const providers = snapshot.val() || {};
-      const providerAccounts = Object.entries(providers).map(([id, data]) => ({
+      state.providers = Object.entries(providers).map(([id, data]) => ({
         id,
         ...data,
-        type: 'provider',
-        status: data.banned ? 'banned' : (data.reportedCount > 0 ? 'reported' : 'active')
+        status: data.banned ? 'banned' : (data.verified ? 'verified' : 'active')
       }));
       
-      // جلب العملاء (إذا كان لديك جدول عملاء)
-      onValue(clientsRef, (snapshot) => {
-        const clients = snapshot.val() || {};
-        const clientAccounts = Object.entries(clients).map(([id, data]) => ({
-          id,
-          ...data,
-          type: 'client',
-          status: data.banned ? 'banned' : (data.reportedCount > 0 ? 'reported' : 'active')
-        }));
-        
-        // دمج الحسابات
-        state.accounts = [...providerAccounts, ...clientAccounts];
-        state.cities = new Set();
-        
-        // استخراج المدن الفريدة
-        state.accounts.forEach(account => {
-          if (account.city) state.cities.add(account.city);
-        });
-        
-        updateFilters();
-        filterAccounts();
+      state.cities = new Set();
+      state.providers.forEach(provider => {
+        if (provider.city) state.cities.add(provider.city);
       });
+      
+      updateFilters();
+      filterProviders();
     });
   } catch (error) {
-    utils.showError('حدث خطأ أثناء تحميل الحسابات');
-    console.error('Load accounts error:', error);
+    utils.showError('حدث خطأ أثناء تحميل مقدمي الخدمة');
+    console.error('Load providers error:', error);
   }
 }
 
@@ -148,241 +102,192 @@ function updateFilters() {
     option.textContent = city;
     elements.cityFilter.appendChild(option);
   });
-  
-  // تحديث الإحصائيات
-  updateStats();
 }
 
-// تحديث الإحصائيات
-function updateStats() {
-  const total = state.accounts.length;
-  const active = state.accounts.filter(a => a.status === 'active').length;
-  const banned = state.accounts.filter(a => a.status === 'banned').length;
-  const reported = state.accounts.filter(a => a.status === 'reported').length;
-  
-  elements.totalAccounts.textContent = total;
-  elements.activeAccounts.textContent = active;
-  elements.bannedAccounts.textContent = banned;
-  elements.reportedAccounts.textContent = reported;
-}
-
-// تصفية الحسابات حسب البحث والتحديدات
-function filterAccounts() {
+// تصفية مقدمي الخدمة حسب البحث والتحديدات
+function filterProviders() {
   const searchTerm = elements.searchInput.value.toLowerCase();
-  const accountType = elements.accountTypeFilter.value;
   const status = elements.statusFilter.value;
   const city = elements.cityFilter.value;
   
-  state.filteredAccounts = state.accounts.filter(account => {
-    // تصفية حسب نوع الحساب
-    if (accountType !== 'all' && account.type !== accountType) return false;
-    
+  state.filteredProviders = state.providers.filter(provider => {
     // تصفية حسب الحالة
-    if (status !== 'all' && account.status !== status) return false;
+    if (status !== 'all' && provider.status !== status) return false;
     
     // تصفية حسب المدينة
-    if (city !== 'all' && account.city !== city) return false;
+    if (city !== 'all' && provider.city !== city) return false;
     
     // تصفية حسب البحث
     if (searchTerm) {
-      const matchesName = account.name?.toLowerCase().includes(searchTerm);
-      const matchesPhone = account.phone?.includes(searchTerm);
-      const matchesCity = account.city?.toLowerCase().includes(searchTerm);
+      const matchesName = provider.name?.toLowerCase().includes(searchTerm);
+      const matchesPhone = provider.phone?.includes(searchTerm);
+      const matchesCity = provider.city?.toLowerCase().includes(searchTerm);
+      const matchesService = provider.serviceType?.toLowerCase().includes(searchTerm);
       
-      if (!matchesName && !matchesPhone && !matchesCity) return false;
+      if (!matchesName && !matchesPhone && !matchesCity && !matchesService) return false;
     }
     
     return true;
   });
   
-  renderAccountsTable();
+  renderProviders();
 }
 
-// عرض الحسابات في الجدول
-function renderAccountsTable() {
-  elements.accountsTableBody.innerHTML = '';
-  
-  if (state.filteredAccounts.length === 0) {
-    elements.accountsTableBody.innerHTML = `
-      <tr>
-        <td colspan="7" class="no-results">لا توجد حسابات مطابقة للبحث</td>
-      </tr>
-    `;
+// عرض مقدمي الخدمة في الشبكة
+function renderProviders() {
+  if (state.filteredProviders.length === 0) {
+    elements.providersGrid.innerHTML = '<div class="no-results">لا توجد نتائج مطابقة للبحث</div>';
     return;
   }
   
-  state.filteredAccounts.forEach(account => {
-    const row = document.createElement('tr');
+  elements.providersGrid.innerHTML = '';
+  
+  state.filteredProviders.forEach(provider => {
+    const providerCard = document.createElement('div');
+    providerCard.className = 'provider-card';
     
-    // صورة الحساب
-    const avatarCell = document.createElement('td');
+    // حالة الحساب
+    const statusDiv = document.createElement('div');
+    statusDiv.className = `provider-status status-${provider.status}`;
+    statusDiv.textContent = provider.status === 'verified' ? 'موثق' : 
+                          provider.status === 'banned' ? 'محظور' : 'نشط';
+    
+    // معلومات مقدم الخدمة
+    const providerContent = document.createElement('div');
+    providerContent.className = 'provider-content';
+    
+    const providerHeader = document.createElement('div');
+    providerHeader.className = 'provider-header';
+    
     const avatarDiv = document.createElement('div');
-    avatarDiv.className = 'account-avatar';
-    avatarDiv.textContent = account.name?.charAt(0) || '?';
-    avatarCell.appendChild(avatarDiv);
+    avatarDiv.className = 'provider-avatar';
+    avatarDiv.textContent = provider.name?.charAt(0) || '?';
     
-    // الاسم
-    const nameCell = document.createElement('td');
-    nameCell.textContent = account.name || 'غير معروف';
+    const infoDiv = document.createElement('div');
+    infoDiv.className = 'provider-info';
     
-    // رقم الهاتف
-    const phoneCell = document.createElement('td');
-    phoneCell.textContent = account.phone || 'غير معروف';
+    const nameDiv = document.createElement('div');
+    nameDiv.className = 'provider-name';
+    nameDiv.textContent = provider.name || 'غير معروف';
     
-    // نوع الحساب
-    const typeCell = document.createElement('td');
-    typeCell.textContent = account.type === 'provider' ? 'مقدم خدمة' : 'زبون';
-    
-    // المدينة
-    const cityCell = document.createElement('td');
-    cityCell.textContent = account.city || 'غير معروف';
-    
-    // الحالة
-    const statusCell = document.createElement('td');
-    const statusSpan = document.createElement('span');
-    statusSpan.className = `account-status status-${account.status}`;
-    
-    switch (account.status) {
-      case 'active':
-        statusSpan.textContent = 'نشط';
-        break;
-      case 'banned':
-        statusSpan.textContent = 'محظور';
-        break;
-      case 'reported':
-        statusSpan.textContent = 'مبلغ عنه';
-        break;
-      default:
-        statusSpan.textContent = 'غير معروف';
+    // إضافة علامة التوثيق إذا كان موثقاً
+    if (provider.status === 'verified') {
+      const verifiedBadge = document.createElement('span');
+      verifiedBadge.className = 'verified-badge';
+      verifiedBadge.innerHTML = '<i class="fas fa-check-circle"></i> موثق';
+      nameDiv.appendChild(verifiedBadge);
     }
     
-    statusCell.appendChild(statusSpan);
+    const detailsDiv = document.createElement('div');
+    detailsDiv.className = 'provider-details';
     
-    // الإجراءات
-    const actionsCell = document.createElement('td');
+    detailsDiv.innerHTML = `
+      <p><i class="fas fa-phone"></i> ${provider.phone || 'غير معروف'}</p>
+      <p><i class="fas fa-city"></i> ${provider.city || 'غير معروف'}</p>
+      <p><i class="fas fa-scissors"></i> ${provider.serviceType || 'غير محدد'}</p>
+      <p><i class="fas fa-map-marker-alt"></i> ${provider.location || 'غير معروف'}</p>
+    `;
+    
+    // أزرار الإجراءات
     const actionsDiv = document.createElement('div');
-    actionsDiv.className = 'actions';
+    actionsDiv.className = 'provider-actions';
     
-    const viewBtn = document.createElement('button');
-    viewBtn.className = 'action-btn view-btn';
-    viewBtn.innerHTML = '<i class="fas fa-eye"></i>';
-    viewBtn.title = 'عرض التفاصيل';
-    viewBtn.onclick = () => showAccountDetails(account);
+    const verifyBtn = document.createElement('button');
+    verifyBtn.className = `btn ${provider.status === 'verified' ? 'btn-outline' : 'btn-primary'}`;
+    verifyBtn.innerHTML = `<i class="fas fa-check-circle"></i> ${provider.status === 'verified' ? 'إلغاء التوثيق' : 'توثيق'}`;
+    verifyBtn.onclick = () => toggleVerifyProvider(provider);
     
     const banBtn = document.createElement('button');
-    banBtn.className = 'action-btn ban-btn';
-    banBtn.innerHTML = '<i class="fas fa-ban"></i>';
-    banBtn.title = account.status === 'banned' ? 'إلغاء الحظر' : 'حظر الحساب';
-    banBtn.onclick = (e) => {
-      e.stopPropagation();
-      toggleBanAccount(account);
-    };
+    banBtn.className = `btn ${provider.status === 'banned' ? 'btn-success' : 'btn-danger'}`;
+    banBtn.innerHTML = `<i class="fas fa-ban"></i> ${provider.status === 'banned' ? 'إلغاء الحظر' : 'حظر'}`;
+    banBtn.onclick = () => toggleBanProvider(provider);
     
-    actionsDiv.appendChild(viewBtn);
+    actionsDiv.appendChild(verifyBtn);
     actionsDiv.appendChild(banBtn);
     
-    // إضافة زر الإنذار لمقدمي الخدمة المبلغ عنهم
-    if (account.type === 'provider' && account.status === 'reported') {
-      const warnBtn = document.createElement('button');
-      warnBtn.className = 'action-btn warn-btn';
-      warnBtn.innerHTML = '<i class="fas fa-exclamation-triangle"></i>';
-      warnBtn.title = 'إرسال إنذار';
-      warnBtn.onclick = (e) => {
-        e.stopPropagation();
-        sendWarning(account);
-      };
-      actionsDiv.appendChild(warnBtn);
-    }
+    // بناء البطاقة
+    infoDiv.appendChild(nameDiv);
+    infoDiv.appendChild(detailsDiv);
+    providerHeader.appendChild(avatarDiv);
+    providerHeader.appendChild(infoDiv);
+    providerContent.appendChild(providerHeader);
+    providerContent.appendChild(actionsDiv);
+    providerCard.appendChild(statusDiv);
+    providerCard.appendChild(providerContent);
     
-    actionsCell.appendChild(actionsDiv);
-    
-    // بناء الصف
-    row.appendChild(avatarCell);
-    row.appendChild(nameCell);
-    row.appendChild(phoneCell);
-    row.appendChild(typeCell);
-    row.appendChild(cityCell);
-    row.appendChild(statusCell);
-    row.appendChild(actionsCell);
-    
-    // إضافة الصف للجدول
-    elements.accountsTableBody.appendChild(row);
+    // إضافة البطاقة للشبكة
+    elements.providersGrid.appendChild(providerCard);
   });
 }
 
-// عرض تفاصيل الحساب في النافذة المنبثقة
-function showAccountDetails(account) {
-  state.currentAccount = account;
+// توثيق/إلغاء توثيق مقدم الخدمة
+async function toggleVerifyProvider(provider) {
+  const isVerified = provider.status === 'verified';
+  const confirmMessage = isVerified 
+    ? `هل أنت متأكد من إلغاء توثيق ${provider.name}؟`
+    : `هل أنت متأكد من توثيق ${provider.name}؟`;
   
-  // تعبئة البيانات الأساسية
-  elements.modalAccountName.textContent = account.name || 'غير معروف';
-  elements.modalAccountAvatar.textContent = account.name?.charAt(0) || '?';
-  elements.modalAccountPhone.textContent = account.phone || 'غير معروف';
-  elements.modalAccountType.textContent = account.type === 'provider' ? 'مقدم خدمة' : 'زبون';
-  elements.modalAccountCity.textContent = account.city || 'غير معروف';
-  elements.modalAccountDate.textContent = utils.formatDate(account.createdAt);
+  if (!confirm(confirmMessage)) return;
   
-  // تحديث حالة الحساب
-  const statusText = account.status === 'banned' ? 'محظور' : 
-                   account.status === 'reported' ? 'مبلغ عنه' : 'نشط';
-  
-  elements.modalAccountStatus.textContent = statusText;
-  
-  // تحديث أزرار الحظر/إلغاء الحظر
-  if (account.status === 'banned') {
-    elements.banAccountBtn.classList.add('hidden');
-    elements.unbanAccountBtn.classList.remove('hidden');
-  } else {
-    elements.banAccountBtn.classList.remove('hidden');
-    elements.unbanAccountBtn.classList.add('hidden');
-  }
-  
-  // تحميل البلاغات (إذا وجدت)
-  loadAccountReports(account.id);
-  
-  // عرض النافذة المنبثقة
-  elements.accountModal.classList.add('active');
-}
-
-// إغلاق النافذة المنبثقة
-function closeModal() {
-  elements.accountModal.classList.remove('active');
-  state.currentAccount = null;
-}
-
-// تحميل البلاغات على الحساب
-function loadAccountReports(accountId) {
-  const reportsRef = ref(database, `reports/${accountId}`);
-  
-  onValue(reportsRef, (snapshot) => {
-    const reports = snapshot.val() || {};
-    elements.accountReportsList.innerHTML = '';
-    
-    if (Object.keys(reports).length === 0) {
-      elements.accountReportsSection.classList.add('hidden');
-      return;
-    }
-    
-    elements.accountReportsSection.classList.remove('hidden');
-    
-    Object.entries(reports).forEach(([id, report]) => {
-      const reportItem = document.createElement('li');
-      reportItem.className = 'report-item';
-      
-      reportItem.innerHTML = `
-        <p><strong>سبب البلاغ:</strong> ${report.reason || 'غير محدد'}</p>
-        <p>${report.details || 'لا توجد تفاصيل إضافية'}</p>
-        <div class="report-meta">
-          <span>${utils.formatDate(report.timestamp)}</span>
-          <span>بواسطة: ${report.reporterName || 'مجهول'}</span>
-        </div>
-      `;
-      
-      elements.accountReportsList.appendChild(reportItem);
+  try {
+    await update(ref(database, `serviceProviders/${provider.id}`), {
+      verified: !isVerified
     });
-  });
+    
+    utils.showSuccess(isVerified ? 'تم إلغاء التوثيق بنجاح' : 'تم التوثيق بنجاح');
+  } catch (error) {
+    utils.showError('حدث خطأ أثناء عملية التوثيق');
+    console.error('Verify provider error:', error);
+  }
 }
 
-// حظر/إلغاء حظر الحساب
-async function toggleBanAccount(account) {
-  if (!confirm(`هل
+// حظر/إلغاء حظر مقدم الخدمة
+async function toggleBanProvider(provider) {
+  const isBanned = provider.status === 'banned';
+  const confirmMessage = isBanned 
+    ? `هل أنت متأكد من إلغاء حظر ${provider.name}؟`
+    : `هل أنت متأكد من حظر ${provider.name}؟ سيتم إخفاء الحساب نهائياً من الموقع.`;
+  
+  if (!confirm(confirmMessage)) return;
+  
+  try {
+    await update(ref(database, `serviceProviders/${provider.id}`), {
+      banned: !isBanned
+    });
+    
+    utils.showSuccess(isBanned ? 'تم إلغاء الحظر بنجاح' : 'تم الحظر بنجاح');
+  } catch (error) {
+    utils.showError('حدث خطأ أثناء عملية الحظر');
+    console.error('Ban provider error:', error);
+  }
+}
+
+// تسجيل الخروج
+async function logout() {
+  try {
+    await signOut(auth);
+    window.location.href = 'index.html';
+  } catch (error) {
+    utils.showError('حدث خطأ أثناء تسجيل الخروج');
+    console.error('Logout error:', error);
+  }
+}
+
+// تهيئة الأحداث
+function init() {
+  elements.searchInput.addEventListener('input', utils.debounce(filterProviders, 300));
+  elements.statusFilter.addEventListener('change', filterProviders);
+  elements.cityFilter.addEventListener('change', filterProviders);
+  elements.refreshBtn.addEventListener('click', loadProviders);
+  
+  // تحميل مقدمي الخدمة عند بدء التشغيل
+  loadProviders();
+}
+
+// بدء التطبيق
+init();
+
+// جعل الدوال متاحة عالمياً للاستدعاء من HTML
+window.toggleVerifyProvider = toggleVerifyProvider;
+window.toggleBanProvider = toggleBanProvider;
+window.logout = logout;
