@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة تحكم المشرفين - طابور أونلاين</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="admin.css">
+</head>
+<body>
+    <div class="admin-dashboard">
+        <!-- شريط التنقل العلوي -->
+        <header class="admin-header">
+            <div class="header-content">
+                <h1><i class="fas fa-shield-alt"></i> لوحة تحكم المشرفين</h1>
+                <div class="admin-actions">
+                    <button class="btn btn-icon" id="refreshBtn">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                    <button class="btn btn-danger" onclick="logout()">
+                        <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- محتوى لوحة التحكم -->
+        <main class="admin-content">
+            <!-- شريط البحث والتصفية -->
+            <div class="admin-filters">
+                <div class="search-container">
+                    <input type="text" id="accountSearch" placeholder="ابحث بالاسم، رقم الهاتف أو المدينة...">
+                    <button class="search-btn">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+                <div class="filter-group">
+                    <select id="accountTypeFilter">
+                        <option value="all">جميع الحسابات</option>
+                        <option value="provider">مقدمي الخدمة</option>
+                        <option value="client">العملاء</option>
+                    </select>
+                    <select id="statusFilter">
+                        <option value="all">جميع الحالات</option>
+                        <option value="active">نشط</option>
+                        <option value="banned">محظور</option>
+                        <option value="reported">مبلغ عنه</option>
+                    </select>
+                    <select id="cityFilter">
+                        <option value="all">جميع المدن</option>
+                        <!-- سيتم ملء هذا من خلال JavaScript -->
+                    </select>
+                </div>
+            </div>
+
+            <!-- إحصائيات سريعة -->
+            <div class="admin-stats">
+                <div class="stat-card">
+                    <div class="stat-icon bg-primary">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="totalAccounts">0</h3>
+                        <p>إجمالي الحسابات</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon bg-success">
+                        <i class="fas fa-user-check"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="activeAccounts">0</h3>
+                        <p>حسابات نشطة</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon bg-danger">
+                        <i class="fas fa-user-slash"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="bannedAccounts">0</h3>
+                        <p>حسابات محظورة</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon bg-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 id="reportedAccounts">0</h3>
+                        <p>حسابات مبلغ عنها</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- قائمة الحسابات -->
+            <div class="accounts-list">
+                <h2><i class="fas fa-list"></i> إدارة الحسابات</h2>
+                <div class="table-responsive">
+                    <table class="accounts-table">
+                        <thead>
+                            <tr>
+                                <th>الصورة</th>
+                                <th>الاسم</th>
+                                <th>رقم الهاتف</th>
+                                <th>النوع</th>
+                                <th>المدينة</th>
+                                <th>الحالة</th>
+                                <th>الإجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="accountsTableBody">
+                            <!-- سيتم ملء هذا من خلال JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+
+        <!-- نافذة تفاصيل الحساب -->
+        <div class="modal hidden" id="accountModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="modalAccountName">تفاصيل الحساب</h3>
+                    <button class="close-modal" onclick="closeModal()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="account-details">
+                        <div class="account-avatar" id="modalAccountAvatar">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="account-info">
+                            <p><strong>رقم الهاتف:</strong> <span id="modalAccountPhone"></span></p>
+                            <p><strong>نوع الحساب:</strong> <span id="modalAccountType"></span></p>
+                            <p><strong>المدينة:</strong> <span id="modalAccountCity"></span></p>
+                            <p><strong>تاريخ التسجيل:</strong> <span id="modalAccountDate"></span></p>
+                            <p><strong>الحالة:</strong> <span id="modalAccountStatus"></span></p>
+                        </div>
+                    </div>
+                    <div class="account-reports" id="accountReportsSection">
+                        <h4><i class="fas fa-flag"></i> البلاغات</h4>
+                        <ul id="accountReportsList">
+                            <!-- سيتم ملء هذا من خلال JavaScript -->
+                        </ul>
+                    </div>
+                    <div class="account-actions">
+                        <button class="btn btn-danger" id="banAccountBtn">
+                            <i class="fas fa-ban"></i> حظر الحساب
+                        </button>
+                        <button class="btn btn-success hidden" id="unbanAccountBtn">
+                            <i class="fas fa-check-circle"></i> إلغاء الحظر
+                        </button>
+                        <button class="btn btn-warning" id="warnAccountBtn">
+                            <i class="fas fa-exclamation-triangle"></i> إنذار
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="admin.js" type="module"></script>
+</body>
+</html>
