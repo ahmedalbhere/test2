@@ -10,7 +10,6 @@
 </head>
 <body>
     <div class="admin-dashboard">
-        <!-- شريط التنقل العلوي -->
         <header class="admin-header">
             <div class="header-content">
                 <h1><i class="fas fa-cut"></i> إدارة مقدمي الخدمات</h1>
@@ -25,9 +24,7 @@
             </div>
         </header>
 
-        <!-- محتوى لوحة التحكم -->
         <main class="admin-content">
-            <!-- شريط البحث والتصفية -->
             <div class="admin-filters">
                 <div class="search-container">
                     <input type="text" id="providerSearch" placeholder="ابحث بالاسم، رقم الهاتف أو المدينة...">
@@ -44,16 +41,13 @@
                     </select>
                     <select id="cityFilter">
                         <option value="all">جميع المدن</option>
-                        <!-- سيتم ملء هذا من خلال JavaScript -->
                     </select>
                 </div>
             </div>
 
-            <!-- قائمة مقدمي الخدمات -->
             <div class="providers-list">
                 <h2><i class="fas fa-list"></i> مقدمي الخدمات</h2>
                 <div class="providers-grid" id="providersGrid">
-                    <!-- سيتم ملء هذا من خلال JavaScript -->
                     <div class="loading">جارٍ تحميل مقدمي الخدمات...</div>
                 </div>
             </div>
