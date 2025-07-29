@@ -246,13 +246,14 @@ async function toggleBanProvider(provider) {
   const isBanned = provider.status === 'banned';
   const confirmMessage = isBanned 
     ? `هل أنت متأكد من إلغاء حظر ${provider.name}؟`
-    : `هل أنت متأكد من حظر ${provider.name}؟ سيتم إخفاء الحساب نهائياً من الموقع.`;
+    : `هل أنت متأكد من حظر ${provider.name}؟ سيتم إخفاء الحساب من صفحة العملاء.`;
   
   if (!confirm(confirmMessage)) return;
   
   try {
     await update(ref(database, `serviceProviders/${provider.id}`), {
-      banned: !isBanned
+      banned: !isBanned,
+      status: isBanned ? 'open' : 'closed'
     });
     
     utils.showSuccess(isBanned ? 'تم إلغاء الحظر بنجاح' : 'تم الحظر بنجاح');
