@@ -6,7 +6,8 @@ import {
   update,
   query,
   orderByChild,
-  equalTo
+  equalTo,
+  set
 } from "https://www.gstatic.com/firebasejs/9.6.0/firebase-database.js";
 import { 
   getAuth, 
@@ -43,8 +44,21 @@ const elements = {
   statusFilter: document.getElementById('statusFilter'),
   cityFilter: document.getElementById('cityFilter'),
   providersGrid: document.getElementById('providersGrid'),
-  refreshBtn: document.getElementById('refreshBtn')
+  refreshBtn: document.getElementById('refreshBtn'),
+  adminLoginContainer: document.getElementById('adminLogin'),
+  adminDashboard: document.getElementById('adminDashboard'),
+  adminPasswordInput: document.getElementById('adminPassword'),
+  adminLoginError: document.getElementById('adminLoginError'),
+  changePasswordModal: document.getElementById('changePasswordModal'),
+  currentPassword: document.getElementById('currentPassword'),
+  newPassword: document.getElementById('newPassword'),
+  confirmNewPassword: document.getElementById('confirmNewPassword'),
+  changePasswordError: document.getElementById('changePasswordError')
 };
+
+// كلمة المرور الافتراضية
+let adminPassword = "098765";
+const ADMIN_PASSWORD_KEY = 'admin_password';
 
 // وظائف المساعدة
 const utils = {
@@ -56,12 +70,29 @@ const utils = {
     };
   },
   
-  showError: (message) => {
-    alert(message);
+  showError: (message, element = null) => {
+    if (element) {
+      element.textContent = message;
+      element.classList.remove('hidden');
+      setTimeout(() => element.classList.add('hidden'), 5000);
+    } else {
+      alert(message);
+    }
   },
   
   showSuccess: (message) => {
     alert(message);
+  },
+  
+  loadAdminPassword: () => {
+    const savedPassword = localStorage.getItem(ADMIN_PASSWORD_KEY);
+    if (savedPassword) {
+      adminPassword = savedPassword;
+    }
+  },
+  
+  saveAdminPassword: (password) => {
+    localStorage.setItem(ADMIN_PASSWORD_KEY, password);
   }
 };
 
@@ -267,15 +298,77 @@ async function toggleBanProvider(provider) {
 async function logout() {
   try {
     await signOut(auth);
-    window.location.href = 'index.html';
+    elements.adminDashboard.classList.add('hidden');
+    elements.adminLoginContainer.classList.remove('hidden');
+    elements.adminPasswordInput.value = '';
+    elements.adminLoginError.classList.add('hidden');
   } catch (error) {
     utils.showError('حدث خطأ أثناء تسجيل الخروج');
     console.error('Logout error:', error);
   }
 }
 
+// إدارة كلمة مرور المشرف
+function checkAdminPassword() {
+  const enteredPassword = elements.adminPasswordInput.value;
+  if (enteredPassword === adminPassword) {
+    elements.adminLoginContainer.classList.add('hidden');
+    elements.adminDashboard.classList.remove('hidden');
+    elements.adminPasswordInput.value = '';
+    elements.adminLoginError.classList.add('hidden');
+  } else {
+    utils.showError('كلمة المرور غير صحيحة', elements.adminLoginError);
+  }
+}
+
+function showChangePasswordForm() {
+  elements.changePasswordModal.classList.remove('hidden');
+  elements.changePasswordError.classList.add('hidden');
+  elements.currentPassword.value = '';
+  elements.newPassword.value = '';
+  elements.confirmNewPassword.value = '';
+}
+
+function hideChangePasswordForm() {
+  elements.changePasswordModal.classList.add('hidden');
+}
+
+function changeAdminPassword() {
+  const currentPass = elements.currentPassword.value;
+  const newPass = elements.newPassword.value;
+  const confirmPass = elements.confirmNewPassword.value;
+  
+  if (currentPass !== adminPassword) {
+    utils.showError('كلمة المرور الحالية غير صحيحة', elements.changePasswordError);
+    return;
+  }
+  
+  if (newPass.length < 6) {
+    utils.showError('كلمة المرور يجب أن تكون 6 أحرف على الأقل', elements.changePasswordError);
+    return;
+  }
+  
+  if (newPass !== confirmPass) {
+    utils.showError('كلمتا المرور غير متطابقتين', elements.changePasswordError);
+    return;
+  }
+  
+  adminPassword = newPass;
+  utils.saveAdminPassword(newPass);
+  hideChangePasswordForm();
+  utils.showSuccess('تم تغيير كلمة المرور بنجاح');
+}
+
 // تهيئة الأحداث
 function init() {
+  // تحميل كلمة المرور المحفوظة
+  utils.loadAdminPassword();
+  
+  // إخفاء لوحة التحكم وإظهار صفحة الدخول
+  elements.adminDashboard.classList.add('hidden');
+  elements.adminLoginContainer.classList.remove('hidden');
+  
+  // تهيئة أحداث البحث والتصفية
   elements.searchInput.addEventListener('input', utils.debounce(filterProviders, 300));
   elements.statusFilter.addEventListener('change', filterProviders);
   elements.cityFilter.addEventListener('change', filterProviders);
@@ -289,6 +382,10 @@ function init() {
 init();
 
 // جعل الدوال متاحة عالمياً للاستدعاء من HTML
+window.checkAdminPassword = checkAdminPassword;
+window.showChangePasswordForm = showChangePasswordForm;
+window.hideChangePasswordForm = hideChangePasswordForm;
+window.changeAdminPassword = changeAdminPassword;
 window.toggleVerifyProvider = toggleVerifyProvider;
 window.toggleBanProvider = toggleBanProvider;
 window.logout = logout;
