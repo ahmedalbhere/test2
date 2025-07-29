@@ -258,7 +258,8 @@ async function providerSignup() {
       queue: {},
       averageRating: 0,
       ratingCount: 0,
-      verified: false // Default value for new providers
+      verified: false,
+      banned: false // إضافة حالة الحظر الافتراضية
     });
     
     state.currentUser = {
@@ -331,6 +332,13 @@ async function providerLogin() {
     
     if (snapshot.exists()) {
       const providerData = snapshot.val();
+      
+      // التحقق من حالة الحظر قبل السماح بتسجيل الدخول
+      if (providerData.banned) {
+        utils.showError(error, 'هذا الحساب محظور ولا يمكن الدخول إليه');
+        await signOut(auth);
+        return;
+      }
       
       state.currentUser = {
         id: userCredential.user.uid,
@@ -418,7 +426,9 @@ function renderProvidersList() {
     return;
   }
   
+  // تصفية الحسابات المحظورة قبل الفرز
   const sortedProviders = Object.entries(state.serviceProviders)
+    .filter(([id, provider]) => !provider.banned) // هذه هي الإضافة المهمة
     .sort(([, a], [, b]) => (b.averageRating || 0) - (a.averageRating || 0));
   
   sortedProviders.forEach(([id, provider], index) => {
@@ -536,7 +546,7 @@ async function checkExistingBooking() {
   }
   
   for (const [providerId, provider] of Object.entries(state.serviceProviders)) {
-    if (provider.queue) {
+    if (provider.queue && !provider.banned) { // إضافة شرط !provider.banned
       for (const [bookingId, booking] of Object.entries(provider.queue)) {
         if (booking.clientId === state.currentUser.id || booking.clientPhone === state.currentUser.phone) {
           const bookingData = {
