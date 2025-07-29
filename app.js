@@ -257,7 +257,8 @@ async function providerSignup() {
       status: 'open',
       queue: {},
       averageRating: 0,
-      ratingCount: 0
+      ratingCount: 0,
+      verified: false // Default value for new providers
     });
     
     state.currentUser = {
@@ -338,7 +339,8 @@ async function providerLogin() {
         city: providerData.city,
         serviceType: providerData.serviceType,
         location: providerData.location,
-        type: 'provider'
+        type: 'provider',
+        verified: providerData.verified || false
       };
       
       elements.provider.avatar.textContent = providerData.name.charAt(0);
@@ -427,6 +429,10 @@ function renderProvidersList() {
       booking.clientPhone === state.currentUser?.phone
     );
     
+    // علامة التوثيق
+    const verifiedBadge = provider.verified ? 
+      '<span class="verified-badge"><i class="fas fa-check-circle"></i> موثق</span>' : '';
+    
     const providerCard = document.createElement('div');
     providerCard.className = `provider-card ${isTopRated ? 'top-rated' : ''}`;
     
@@ -444,7 +450,7 @@ function renderProvidersList() {
       <div class="provider-info">
         <div class="provider-header">
           <div class="provider-avatar">${provider.name.charAt(0)}</div>
-          <div class="provider-name">${provider.name}</div>
+          <div class="provider-name">${provider.name} ${verifiedBadge}</div>
         </div>
         <div class="provider-status ${statusClass}">${statusText}</div>
         ${ratingStars}
