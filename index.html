@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>تدريب المحاسبة - قيود اليومية</title>
+<title>تدريب قيود اليومية</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Segoe UI',Tahoma;background:#f2f7fb;padding:12px}
 .app{max-width:900px;margin:auto;background:#fff;border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,0.1);overflow:hidden}
-header{background:#1f3a58;color:#fff;padding:20px;text-align:center}
+header{background:#1f3a58;color:#fff;text-align:center;padding:20px}
 .content{padding:15px}
 .panel{background:#f9fbff;padding:15px;border-radius:10px;margin-bottom:15px}
 .operation-card{background:#fff;border:1px solid #e4e9f0;padding:12px;border-radius:10px;margin-top:10px}
@@ -31,21 +31,19 @@ button{padding:10px 14px;border:none;border-radius:8px;color:#fff;font-weight:70
 .correct-answer{background:#eef8ff;border:1px solid #cfe9ff;padding:12px;margin-top:10px;border-radius:8px;display:none}
 .progress-bar{height:12px;background:#dfe9e2;border-radius:10px;overflow:hidden;margin-top:8px}
 .progress{height:100%;background:#27ae60;width:0%;transition:0.3s}
-@media(max-width:500px){
-.amounts input{font-size:13px}
-}
 </style>
 </head>
 
 <body>
 <div class="app">
 <header>
-<h1>تدريب المحاسبة - قيود اليومية</h1>
-<p>بواسطة أ/ أحمد جمال (البحيري)</p>
+<h1>تدريب قيود اليومية</h1>
+<p>إعداد: أ/ أحمد جمال (البحيري)</p>
 </header>
 
 <div class="content">
 <div class="panel">
+
 <div class="operation-card">
 <div id="operationDesc" class="operation-desc">جاري التحميل...</div>
 <div id="operationType" style="margin-top:6px;font-weight:bold;"></div>
@@ -56,9 +54,9 @@ button{padding:10px 14px;border:none;border-radius:8px;color:#fff;font-weight:70
 <div class="operation-card">
 <h3>تعليمات</h3>
 <ol style="padding:15px;line-height:1.7">
-<li>اختر الحساب الصحيح من القائمة المنسدلة.</li>
-<li>أدخل مبلغ المدين والدائن حسب العملية.</li>
-<li>اضغط "تحقق" لمعرفة صحة القيد.</li>
+<li>اختر الحساب الصحيح من القائمة.</li>
+<li>أدخل مبلغ المدين والدائن.</li>
+<li>اضغط “تحقق”.</li>
 </ol>
 </div>
 
@@ -73,146 +71,9 @@ button{padding:10px 14px;border:none;border-radius:8px;color:#fff;font-weight:70
 <div id="correctAnswer" class="correct-answer"></div>
 
 <div class="operation-card">
-المهمة <span id="currentIndex">0</span> من <span id="totalOps">30</span>
+المهمة <span id="currentIndex">0</span> من <span id="totalOps">50</span>
 <div class="progress-bar"><div id="progress" class="progress"></div></div>
 </div>
 
 </div>
 </div>
-
-<script>
-document.addEventListener("DOMContentLoaded", function(){
-
-// جميع الحسابات ليستعملها في إنشاء الخيارات
-const allAccounts = [
-"أ. النقدية","أ. المدينون","أ. الدائنون","أ. البضاعة","أ. الأجهزة الحاسوب",
-"أ. الأثاث المكتبي","أ. مصروف الإيجار","أ. مصروف الرواتب","أ. مصروف الإهلاك",
-"أ. مصروف المواد المكتبية","أ. مصروف التأمين","أ. مصروف الفوائد",
-"أ. مصروف التكاليف","أ. مصروفات مستحقة","أ. مصروفات مدفوعة مقدماً",
-"أ. إيراد الخدمات","أ. إيراد المبيعات","أ. ربح المبيع","أ. ربح بيع الأصل",
-"أ. ملخص الأرباح والخسائر","أ. رأس المال","أ. ضريبة مستحقة","أ. مخصصات خسائر الائتمان"
-];
-
-// بيانات العمليات
-const operations = [
-{id:1,type:'عادية',description:'شراء أجهزة حاسوب نقداً بمبلغ 50,000 جنيه',
- entries:[{account:'أ. الأجهزة الحاسوب',debit:50000,credit:0},{account:'أ. النقدية',debit:0,credit:50000}]},
-{id:2,type:'عادية',description:'شراء بضاعة بالآجل بقيمة 30,000 جنيه',
- entries:[{account:'أ. البضاعة',debit:30000,credit:0},{account:'أ. الدائنون',debit:0,credit:30000}]},
-
-// … يمكنك إبقاء باقي العمليات كما هي بدون تغيير
-];
-
-while(operations.length < 30) operations.push(operations[0]); // مؤقت للعرض فقط
-
-let currentIndex = 0;
-
-// تحميل العملية
-function loadOperation(i){
-const op = operations[i];
-document.getElementById("operationDesc").textContent = op.description;
-document.getElementById("operationType").textContent = "النوع: " + op.type;
-document.getElementById("currentIndex").textContent = i+1;
-
-let html = "";
-
-op.entries.forEach((entry, idx)=>{
-let correct = entry.account;
-
-// اختار 3 حسابات خطأ عشوائية
-let wrong = allAccounts.filter(a=>a!==correct);
-wrong = wrong.sort(()=>0.5-Math.random()).slice(0,3);
-
-// دمج الخيارات (الصحيح + 3 خطأ) ثم خلطها
-let options = [correct,...wrong].sort(()=>0.5-Math.random());
-
-html += `
-<div class="entry-row">
-<select class="acc" data-idx="${idx}">
-<option value="">اختر الحساب</option>
-${options.map(o=>`<option value="${o}">${o}</option>`).join("")}
-</select>
-
-<div class="amounts">
-<input type="number" placeholder="مدين" class="debit" data-idx="${idx}">
-<input type="number" placeholder="دائن" class="credit" data-idx="${idx}">
-</div>
-</div>`;
-});
-
-document.getElementById("journalArea").innerHTML = html;
-updateProgress();
-}
-
-// تقدم الشريط
-function updateProgress(){
-document.getElementById("progress").style.width =
-((currentIndex+1)/operations.length*100)+"%";
-}
-
-// تحقق
-function checkEntry(){
-const op = operations[currentIndex];
-let ok = true;
-
-op.entries.forEach((entry, idx)=>{
-let selected = document.querySelector(`select[data-idx="${idx}"]`).value;
-let d = parseFloat(document.querySelector(`.debit[data-idx="${idx}"]`).value)||0;
-let c = parseFloat(document.querySelector(`.credit[data-idx="${idx}"]`).value)||0;
-
-if(selected !== entry.account || d !== entry.debit || c !== entry.credit){
-ok = false;
-}
-});
-
-let r = document.getElementById("result");
-if(ok){
-r.textContent = "✔ القيد صحيح";
-r.className = "result correct";
-} else {
-r.textContent = "✘ القيد غير صحيح";
-r.className = "result incorrect";
-}
-r.style.display="block";
-}
-
-// عرض الإجابة
-function showAnswer(){
-const op = operations[currentIndex];
-let html="<h3>القيد الصحيح:</h3>";
-op.entries.forEach(e=>{
-html += `<p>${e.account} — مدين: ${e.debit} — دائن: ${e.credit}</p>`;
-});
-document.getElementById("correctAnswer").innerHTML = html;
-document.getElementById("correctAnswer").style.display="block";
-}
-
-// التالي
-function next(){
-currentIndex++;
-if(currentIndex>=operations.length) currentIndex=0;
-loadOperation(currentIndex);
-document.getElementById("result").style.display="none";
-document.getElementById("correctAnswer").style.display="none";
-}
-
-// مسح
-function clearFields(){
-document.querySelectorAll("input").forEach(i=>i.value="");
-document.querySelectorAll("select").forEach(s=>s.value="");
-}
-
-// أحداث
-document.getElementById("checkBtn").onclick = checkEntry;
-document.getElementById("showAnswerBtn").onclick = showAnswer;
-document.getElementById("nextBtn").onclick = next;
-document.getElementById("clearBtn").onclick = clearFields;
-
-// تشغيل
-loadOperation(0);
-
-});
-</script>
-
-</body>
-</html>
